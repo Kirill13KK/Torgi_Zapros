@@ -14,21 +14,13 @@ def _is_case_number(s: str) -> bool:
 
 
 PREFIXES: list[tuple[str, PropertyType]] = [
-    # vehicle — латинские и смешанные варианты тоже принимаем
-    ("ТС", PropertyType.VEHICLE),
-    ("TC", PropertyType.VEHICLE),
-    ("TС", PropertyType.VEHICLE),
-    ("ТC", PropertyType.VEHICLE),
-    # realty
-    ("НД", PropertyType.REALTY),
-    ("HD", PropertyType.REALTY),
-    ("HД", PropertyType.REALTY),
-    ("Нд", PropertyType.REALTY),
     # weapon — длинные формы раньше коротких
     ("Оружение", PropertyType.WEAPON),
     ("Оружие", PropertyType.WEAPON),
     ("Оруж", PropertyType.WEAPON),
 ]
+
+_CYRILLIC_RE = re.compile(r"[А-Яа-яЁё]")
 
 _PREFIX_SEPARATORS = " :-\t.,—–"
 
@@ -145,13 +137,12 @@ def _keyword_classify(text: str, s: Settings) -> PropertyType | None:
     if not text:
         return None
     a = text.lower()
-    for kw in s.vehicle_keywords:
-        if kw in a:
-            return PropertyType.VEHICLE
     for kw in s.weapon_keywords:
         if kw in a:
             return PropertyType.WEAPON
-    for kw in s.realty_keywords:
+    for kw in s.vehicle_keywords:
         if kw in a:
-            return PropertyType.REALTY
+            return PropertyType.VEHICLE
+    if _CYRILLIC_RE.search(text):
+        return PropertyType.REALTY
     return None

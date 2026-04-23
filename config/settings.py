@@ -54,24 +54,17 @@ class Settings(BaseSettings):
     sheet_id: str
     sheet_tab_partners: str = "Партнёры"
 
-    realty_keywords_csv: str = (
-        "зем,участок,квартир,дом,гараж,нежил,здание,помещен,комнат,"
-        "зу ,зу1,зу.,кв ,кв.,кв1,ком ,ком1,д1/,д 1/,ком.,апартамент,"
-        "объект незавершен,объект незаверш,строительств,офис,склад,коттедж,"
-        "дача,строение"
-    )
     vehicle_keywords_csv: str = (
-        "hyundai,kia,ford,toyota,bmw,nissan,lada,ваз,audi,mercedes,volkswagen,"
-        "vw,skoda,renault,mitsubishi,mazda,honda,subaru,volvo,chevrolet,opel,"
+        # Латинские марки авто
+        "hyundai,kia,ford,toyota,bmw,nissan,audi,mercedes,volkswagen,vw,"
+        "skoda,renault,mitsubishi,mazda,honda,subaru,volvo,chevrolet,opel,"
         "peugeot,citroen,fiat,porsche,infiniti,lexus,jaguar,land rover,"
-        "range rover,cruiser,лада,хонда,тойота,ниссан,киа,форд,бмв,мерседес,"
-        "автомобил,brilliance,geely,chery,газ,заз,niva,нива,changan,changa,"
-        "kaiyi,great wall,great wal,ssang,опель,шевроле,лексус,мазда,тоу,гв,"
-        "грузов,мото,scooter,скутер,прицеп,шкода,катер,лодк,моторн,яхт,"
-        "рапид,октавия,йети,кодиак,2017г,2018г,2019г,2020г,2021г,"
-        "2022г,2023г,2024г,2025г,ferrari,ferari,феррари,lamborghini,ламборгини,"
-        "bentley,бентли,rolls royce,raptor,уаз,камаз,маз,краз,fiat,фиат,dodge,"
-        "ram,джип,jeep,tesla,byd,byd qcj"
+        "range rover,brilliance,geely,chery,changan,kaiyi,great wall,"
+        "ssangyong,ferrari,lamborghini,bentley,rolls royce,dodge,ram,jeep,"
+        "tesla,byd,"
+        # Кириллические маркеры движимого имущества
+        "газ,ваз,краз,камаз,белаз,трактор,маз,лада,лодка,мотор,яхта,"
+        "моторная лодка,прицеп,мотоцикл,квадроцикл,снегоход,снегоболотоход"
     )
     weapon_keywords_csv: str = (
         "оруж,ружь,пистолет,карабин,винтовк,ствол,тоз,сайг,иж-,мосин,сайга,"
@@ -112,10 +105,6 @@ class Settings(BaseSettings):
     @cached_property
     def retry_delays(self) -> list[int]:
         return _parse_int_csv(self.retry_delays_csv)
-
-    @cached_property
-    def realty_keywords(self) -> list[str]:
-        return _parse_str_csv(self.realty_keywords_csv)
 
     @cached_property
     def vehicle_keywords(self) -> list[str]:
