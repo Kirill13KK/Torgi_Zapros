@@ -14,7 +14,9 @@ class AdminOnly(BaseMiddleware):
         event: TelegramObject,
         data: dict[str, Any],
     ) -> Any:
-        if isinstance(event, Message) and event.from_user is not None:
-            if event.from_user.id not in self.allowed:
+        if isinstance(event, Message):
+            if event.chat.type != "private":
+                return None
+            if event.from_user is None or event.from_user.id not in self.allowed:
                 return None
         return await handler(event, data)
