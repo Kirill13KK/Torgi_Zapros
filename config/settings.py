@@ -61,7 +61,7 @@ class Settings(BaseSettings):
         "peugeot,citroen,fiat,porsche,infiniti,lexus,jaguar,land rover,"
         "range rover,brilliance,geely,chery,changan,kaiyi,great wall,"
         "ssangyong,ferrari,lamborghini,bentley,rolls royce,dodge,ram,jeep,"
-        "tesla,byd,"
+        "tesla,byd,lada,howo,uaz,datsun,"
         # Кириллические маркеры движимого имущества
         "газ,ваз,краз,камаз,белаз,трактор,маз,лада,лодка,мотор,яхта,"
         "моторная лодка,прицеп,мотоцикл,квадроцикл,снегоход,снегоболотоход"
