@@ -69,8 +69,8 @@ def parse_data_rows(raw_rows: list[dict], source: DataSource, s: Settings) -> li
     return out
 
 
-def parse_partners(raw_rows: list[dict], s: Settings) -> dict[str, int]:
-    mapping: dict[str, int] = {}
+def parse_partners(raw_rows: list[dict], s: Settings) -> dict[str, tuple[int, int | None]]:
+    mapping: dict[str, tuple[int, int | None]] = {}
     for row in raw_rows:
         if row["row_index"] < s.partners_first_row:
             continue
@@ -79,11 +79,48 @@ def parse_partners(raw_rows: list[dict], s: Settings) -> dict[str, int]:
         chat_id_raw = _val(cells, s.partners_col_chat_id)
         if not name or not chat_id_raw:
             continue
-        try:
-            mapping[name.strip().lower()] = int(chat_id_raw.strip())
-        except ValueError:
+        parsed = _parse_chat_ref(chat_id_raw)
+        if parsed is None:
             continue
+        mapping[name.strip().lower()] = parsed
     return mapping
+
+
+_CHAT_REF_SPLIT_RE = re.compile(r"[\s/,:;]+")
+
+
+def _parse_chat_ref(raw: str) -> tuple[int, int | None] | None:
+    """
+    Parse partner chat reference. Supports:
+      "-1001234567890"           -> (-1001234567890, None)
+      "-1001234567890/12"        -> (-1001234567890, 12)
+      "-1001234567890, 12"       -> (-1001234567890, 12)
+      "https://t.me/c/123/45"    -> (-100123, 45)
+    """
+    s = raw.strip()
+    if not s:
+        return None
+    if "t.me/" in s:
+        m = re.search(r"t\.me/c/(\d+)(?:/(\d+))?", s)
+        if not m:
+            return None
+        chat_id = -1000000000000 - int(m.group(1))
+        thread_id = int(m.group(2)) if m.group(2) else None
+        return chat_id, thread_id
+    parts = [p for p in _CHAT_REF_SPLIT_RE.split(s) if p]
+    if not parts:
+        return None
+    try:
+        chat_id = int(parts[0])
+    except ValueError:
+        return None
+    thread_id: int | None = None
+    if len(parts) > 1:
+        try:
+            thread_id = int(parts[1])
+        except ValueError:
+            thread_id = None
+    return chat_id, thread_id
 
 
 def classify_assets(text: str, s: Settings) -> dict[PropertyType, list[str]]:

@@ -155,7 +155,7 @@ class Runner:
         log.info("run done run_id=%s per_source=%s", run_id, per_source)
         return summary
 
-    async def _fetch_partners(self) -> dict[str, int]:
+    async def _fetch_partners(self) -> dict[str, tuple[int, int | None]]:
         loop = asyncio.get_event_loop()
         partners = await retry_async(
             lambda: loop.run_in_executor(None, self.sheets.fetch_tab,
@@ -172,7 +172,7 @@ class Runner:
         )
 
     async def _process_row(self, run_id: str, source: DataSource, row: DataRow,
-                           partner_map: dict[str, int], mode: str, counts: dict,
+                           partner_map: dict[str, tuple[int, int | None]], mode: str, counts: dict,
                            no_type_rows: list[tuple[str, int, str]]) -> bool:
         if row.done:
             counts["skipped_done"] += 1
@@ -180,12 +180,13 @@ class Runner:
                                 row.asset, None, "SKIPPED_DONE", None, 0)
             return False
 
-        chat_id = partner_map.get(row.partner.strip().lower()) if row.partner else None
-        if chat_id is None:
+        chat_ref = partner_map.get(row.partner.strip().lower()) if row.partner else None
+        if chat_ref is None:
             counts["err_no_chat"] += 1
             self.state.log_send(run_id, source.tab_name, row.row_index, row.partner,
                                 row.asset, None, "ERROR", "ERROR_NO_CHAT", 0)
             return False
+        chat_id, thread_id = chat_ref
 
         if not row.assets_by_type:
             counts["err_no_type"] += 1
@@ -224,7 +225,7 @@ class Runner:
 
         try:
             for chunk in _split_by_limit(final_text, 4000):
-                await self._send_with_retry(chat_id, chunk)
+                await self._send_with_retry(chat_id, chunk, thread_id)
             for ptype, asset_text, new_key, _block in to_send:
                 counts["sent"] += 1
                 self.state.mark_success(row.partner, new_key)
@@ -236,7 +237,7 @@ class Runner:
             await asyncio.sleep(e.retry_after + 1)
             try:
                 for chunk in _split_by_limit(final_text, 4000):
-                    await self._send_with_retry(chat_id, chunk)
+                    await self._send_with_retry(chat_id, chunk, thread_id)
                 for ptype, asset_text, new_key, _block in to_send:
                     counts["sent"] += 1
                     self.state.mark_success(row.partner, new_key)
@@ -284,11 +285,14 @@ class Runner:
             log.exception("failed to write log-cell source=%s row=%d",
                           source.tab_name, row_index)
 
-    async def _send_with_retry(self, chat_id: int, text: str) -> None:
+    async def _send_with_retry(self, chat_id: int, text: str, thread_id: int | None = None) -> None:
         async def _call():
-            await self.bot.send_message(chat_id, text)
-        await retry_async(_call, self.s.retry_delays, _is_tg_transient,
-                          context=f"tg:send:{chat_id}")
+            kwargs = {}
+            if thread_id is not None:
+                kwargs["message_thread_id"] = thread_id
+            await self.bot.send_message(chat_id, text, **kwargs)
+        ctx = f"tg:send:{chat_id}" + (f"/{thread_id}" if thread_id is not None else "")
+        await retry_async(_call, self.s.retry_delays, _is_tg_transient, context=ctx)
 
 
 def _split_by_limit(text: str, limit: int) -> list[str]:
