@@ -30,7 +30,7 @@ DEFAULT_DATA_SOURCES: list[DataSource] = [
         col_partner="D",
         col_fio="B",
         col_asset="E",
-        col_done_flag="G",
+        col_done_flag="H",
         col_write_log="I",
     ),
     DataSource(

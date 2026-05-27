@@ -2,7 +2,13 @@ import asyncio
 import logging
 import sys
 
-from aiogram.types import BotCommand
+from aiogram.types import (
+    BotCommand,
+    BotCommandScopeAllChatAdministrators,
+    BotCommandScopeAllGroupChats,
+    BotCommandScopeAllPrivateChats,
+    BotCommandScopeDefault,
+)
 from pythonjsonlogger import jsonlogger
 
 from config.settings import get_settings
@@ -48,8 +54,11 @@ async def main() -> None:
     dp = build_dispatcher(settings, runner, state)
 
     try:
-        await bot.set_my_commands(BOT_COMMANDS)
-        log.info("set_my_commands ok")
+        await bot.delete_my_commands(scope=BotCommandScopeDefault())
+        await bot.delete_my_commands(scope=BotCommandScopeAllGroupChats())
+        await bot.delete_my_commands(scope=BotCommandScopeAllChatAdministrators())
+        await bot.set_my_commands(BOT_COMMANDS, scope=BotCommandScopeAllPrivateChats())
+        log.info("set_my_commands ok (private chats only)")
     except Exception:
         log.exception("failed to set bot commands")
 
