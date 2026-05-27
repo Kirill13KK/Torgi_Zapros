@@ -41,6 +41,7 @@ class RunSummary:
     errors: int
     per_source: dict[str, dict] = field(default_factory=dict)
     no_type_rows: list[tuple[str, int, str]] = field(default_factory=list)
+    no_chat_rows: list[tuple[str, int, str]] = field(default_factory=list)
 
     def format(self) -> str:
         tag = "ТЕСТ (без отправки)" if self.mode == "dry" else "БОЕВОЙ"
@@ -67,6 +68,14 @@ class RunSummary:
             lines.append(f"  • Telegram отклонил: {c.get('err_tg', 0)}")
             if c.get('err_other', 0):
                 lines.append(f"  • прочие сбои: {c.get('err_other', 0)}")
+            lines.append("")
+
+        if self.no_chat_rows:
+            lines.append("Нет партнёра в справочнике — проверь эти строки:")
+            for src, idx, partner in self.no_chat_rows[:20]:
+                lines.append(f"  • ({src}) строка {idx}: {partner}")
+            if len(self.no_chat_rows) > 20:
+                lines.append(f"  … и ещё {len(self.no_chat_rows) - 20}")
             lines.append("")
 
         if self.no_type_rows:
@@ -123,6 +132,7 @@ class Runner:
 
         per_source: dict[str, dict] = {}
         no_type_rows: list[tuple[str, int, str]] = []
+        no_chat_rows: list[tuple[str, int, str]] = []
 
         sources = [s for s in self.s.data_sources
                    if source_filter is None or s.tab_name in source_filter]
@@ -139,7 +149,7 @@ class Runner:
             counts["total"] = len(rows)
             for row in rows:
                 sent_any = await self._process_row(run_id, source, row, partner_map, mode,
-                                                    counts, no_type_rows)
+                                                    counts, no_type_rows, no_chat_rows)
                 if sent_any:
                     await asyncio.sleep(self.s.message_delay_seconds)
             per_source[source.tab_name] = counts
@@ -150,7 +160,7 @@ class Runner:
         errors = sum(c["err_no_chat"] + c["err_no_type"] + c["err_tg"] + c["err_other"]
                      for c in per_source.values())
 
-        summary = RunSummary(run_id, mode, total, sent, skipped, errors, per_source, no_type_rows)
+        summary = RunSummary(run_id, mode, total, sent, skipped, errors, per_source, no_type_rows, no_chat_rows)
         self.state.finish_run(run_id, total, sent, skipped, errors, per_source)
         log.info("run done run_id=%s per_source=%s", run_id, per_source)
         return summary
@@ -173,7 +183,8 @@ class Runner:
 
     async def _process_row(self, run_id: str, source: DataSource, row: DataRow,
                            partner_map: dict[str, tuple[int, int | None]], mode: str, counts: dict,
-                           no_type_rows: list[tuple[str, int, str]]) -> bool:
+                           no_type_rows: list[tuple[str, int, str]],
+                           no_chat_rows: list[tuple[str, int, str]]) -> bool:
         if row.done:
             counts["skipped_done"] += 1
             self.state.log_send(run_id, source.tab_name, row.row_index, row.partner,
@@ -183,6 +194,7 @@ class Runner:
         chat_ref = partner_map.get(row.partner.strip().lower()) if row.partner else None
         if chat_ref is None:
             counts["err_no_chat"] += 1
+            no_chat_rows.append((source.tab_name, row.row_index, row.partner or ""))
             self.state.log_send(run_id, source.tab_name, row.row_index, row.partner,
                                 row.asset, None, "ERROR", "ERROR_NO_CHAT", 0)
             return False
