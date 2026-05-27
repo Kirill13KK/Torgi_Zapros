@@ -31,7 +31,7 @@ DEFAULT_DATA_SOURCES: list[DataSource] = [
         col_fio="B",
         col_asset="E",
         col_done_flag="H",
-        col_write_log="I",
+        col_write_log="J",
     ),
     DataSource(
         tab_name="Собрания",
