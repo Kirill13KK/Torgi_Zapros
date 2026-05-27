@@ -20,7 +20,7 @@ from core.mutex import RunnerBusyError, acquire_runner_lock
 from core.retry import retry_async
 from core.state import State
 from sheets.client import SheetsClient
-from sheets.parser import DataRow, parse_data_rows, parse_partners
+from sheets.parser import AnchorNotFoundError, DataRow, parse_data_rows, parse_partners
 from templates.messages import PropertyType, render
 
 log = logging.getLogger(__name__)
@@ -42,6 +42,7 @@ class RunSummary:
     per_source: dict[str, dict] = field(default_factory=dict)
     no_type_rows: list[tuple[str, int, str]] = field(default_factory=list)
     no_chat_rows: list[tuple[str, int, str]] = field(default_factory=list)
+    source_errors: dict[str, str] = field(default_factory=dict)
 
     def format(self) -> str:
         tag = "ТЕСТ (без отправки)" if self.mode == "dry" else "БОЕВОЙ"
@@ -68,6 +69,12 @@ class RunSummary:
             lines.append(f"  • Telegram отклонил: {c.get('err_tg', 0)}")
             if c.get('err_other', 0):
                 lines.append(f"  • прочие сбои: {c.get('err_other', 0)}")
+            lines.append("")
+
+        if self.source_errors:
+            lines.append("Ошибки при обработке листов:")
+            for src, msg in self.source_errors.items():
+                lines.append(f"  • {src}: {msg}")
             lines.append("")
 
         if self.no_chat_rows:
@@ -133,6 +140,7 @@ class Runner:
         per_source: dict[str, dict] = {}
         no_type_rows: list[tuple[str, int, str]] = []
         no_chat_rows: list[tuple[str, int, str]] = []
+        source_errors: dict[str, str] = {}
 
         sources = [s for s in self.s.data_sources
                    if source_filter is None or s.tab_name in source_filter]
@@ -145,7 +153,12 @@ class Runner:
                 log.exception("failed to fetch tab %r", source.tab_name)
                 per_source[source.tab_name] = counts
                 continue
-            rows = parse_data_rows(data, source, self.s)
+            try:
+                rows = parse_data_rows(data, source, self.s)
+            except AnchorNotFoundError as e:
+                source_errors[source.tab_name] = str(e)
+                per_source[source.tab_name] = counts
+                continue
             counts["total"] = len(rows)
             for row in rows:
                 sent_any = await self._process_row(run_id, source, row, partner_map, mode,
@@ -160,7 +173,7 @@ class Runner:
         errors = sum(c["err_no_chat"] + c["err_no_type"] + c["err_tg"] + c["err_other"]
                      for c in per_source.values())
 
-        summary = RunSummary(run_id, mode, total, sent, skipped, errors, per_source, no_type_rows, no_chat_rows)
+        summary = RunSummary(run_id, mode, total, sent, skipped, errors, per_source, no_type_rows, no_chat_rows, source_errors)
         self.state.finish_run(run_id, total, sent, skipped, errors, per_source)
         log.info("run done run_id=%s per_source=%s", run_id, per_source)
         return summary

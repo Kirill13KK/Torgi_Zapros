@@ -13,6 +13,8 @@ class DataSource:
     col_done_flag: str
     col_write_log: str
     col_partner_fallback: str = ""
+    anchor_col: str = ""
+    anchor_text: str = ""
     first_row: int = 2
 
 
@@ -40,7 +42,9 @@ DEFAULT_DATA_SOURCES: list[DataSource] = [
         col_fio="B",
         col_asset="E",
         col_done_flag="I",
-        col_write_log="J",
+        col_write_log="L",
+        anchor_col="A",
+        anchor_text="Готовы к собранию",
     ),
 ]
 

@@ -6,6 +6,10 @@ from sheets.client import is_default_white
 from templates.messages import PropertyType
 
 
+class AnchorNotFoundError(Exception):
+    pass
+
+
 _CASE_RE = re.compile(r"^[АAа]\s*\d+-\d+/\d{4}$")
 
 
@@ -37,9 +41,23 @@ class DataRow:
 
 
 def parse_data_rows(raw_rows: list[dict], source: DataSource, s: Settings) -> list[DataRow]:
+    anchor_row: int | None = None
+    if source.anchor_col and source.anchor_text:
+        for row in raw_rows:
+            if _val(row["cells"], source.anchor_col).strip() == source.anchor_text.strip():
+                anchor_row = row["row_index"]
+                break
+        if anchor_row is None:
+            raise AnchorNotFoundError(
+                f'Якорь «{source.anchor_text}» не найден на листе «{source.tab_name}». '
+                f'Бот не может определить список должников для обработки.'
+            )
+
     out: list[DataRow] = []
     for row in raw_rows:
         if row["row_index"] < source.first_row:
+            continue
+        if anchor_row is not None and row["row_index"] <= anchor_row:
             continue
         cells = row["cells"]
         partner = _val(cells, source.col_partner)
