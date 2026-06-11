@@ -71,6 +71,8 @@ class Settings(BaseSettings):
         "газ,ваз,уаз,краз,камаз,белаз,трактор,маз,лада,лодка,мотор,яхта,"
         "моторная лодка,прицеп,мотоцикл,квадроцикл,снегоход,снегоболотоход"
     )
+    business_keywords_csv: str = "ооо"
+
     weapon_keywords_csv: str = (
         "оруж,ружь,пистолет,карабин,винтовк,ствол,тоз,сайг,иж-,мосин,сайга,"
         "мр-,бекас"
@@ -110,6 +112,10 @@ class Settings(BaseSettings):
     @cached_property
     def retry_delays(self) -> list[int]:
         return _parse_int_csv(self.retry_delays_csv)
+
+    @cached_property
+    def business_keywords(self) -> list[str]:
+        return _parse_str_csv(self.business_keywords_csv)
 
     @cached_property
     def vehicle_keywords(self) -> list[str]:

@@ -5,6 +5,7 @@ class PropertyType(str, Enum):
     REALTY = "realty"
     VEHICLE = "vehicle"
     WEAPON = "weapon"
+    BUSINESS = "business"
 
 
 EMOJI_CAR = "🚗"
@@ -14,6 +15,7 @@ EMOJI_BOAT = "🛶"
 EMOJI_WEAPON = "🔫"
 EMOJI_HOUSE = "🏡"
 EMOJI_PLOT = "🏕"
+EMOJI_BUSINESS = "📄"
 
 
 NEED_REALTY = (
@@ -33,10 +35,16 @@ NEED_WEAPON = (
     "адрес хранения и контакт хранителя."
 )
 
+NEED_BUSINESS = (
+    "правоустанавливающие документы, устав, "
+    "сведения о доходах (при наличии) за последние 3 года."
+)
+
 NEEDS: dict[PropertyType, str] = {
     PropertyType.REALTY: NEED_REALTY,
     PropertyType.VEHICLE: NEED_VEHICLE,
     PropertyType.WEAPON: NEED_WEAPON,
+    PropertyType.BUSINESS: NEED_BUSINESS,
 }
 
 
@@ -51,6 +59,8 @@ _TEMPLATE = (
 
 def pick_emoji(ptype: PropertyType, asset: str) -> str:
     a = (asset or "").lower()
+    if ptype == PropertyType.BUSINESS:
+        return EMOJI_BUSINESS
     if ptype == PropertyType.WEAPON:
         return EMOJI_WEAPON
     if ptype == PropertyType.VEHICLE:

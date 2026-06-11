@@ -198,6 +198,9 @@ def _keyword_classify(text: str, s: Settings) -> PropertyType | None:
     for kw in s.vehicle_keywords:
         if kw in a:
             return PropertyType.VEHICLE
+    for kw in s.business_keywords:
+        if kw in a:
+            return PropertyType.BUSINESS
     if _CYRILLIC_RE.search(text):
         return PropertyType.REALTY
     return None
