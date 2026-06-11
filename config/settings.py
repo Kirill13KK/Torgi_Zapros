@@ -66,9 +66,10 @@ class Settings(BaseSettings):
         "range rover,brilliance,geely,chery,changan,kaiyi,great wall,"
         "ssangyong,ssang yong,daewoo,deawoo,haval,hongqi,great wal,"
         "ferrari,lamborghini,bentley,rolls royce,dodge,ram,jeep,"
-        "tesla,byd,lada,howo,uaz,datsun,"
+        "tesla,byd,lada,howo,uaz,datsun,faw,"
         # Кириллические маркеры движимого имущества
-        "газ,ваз,уаз,краз,камаз,белаз,трактор,маз,лада,лодка,мотор,яхта,"
+        "газ,ваз,уаз,зил,краз,камаз,белаз,трактор,маз,лада,лодка,мотор,яхта,"
+        "погрузчик,экскаватор,"
         "моторная лодка,прицеп,мотоцикл,квадроцикл,снегоход,снегоболотоход,"
         "авто,фургон"
     )
