@@ -37,6 +37,7 @@ class DataRow:
     fio: str
     asset: str
     done: bool
+    bank: str = ""
     assets_by_type: dict[PropertyType, list[str]] = field(default_factory=dict)
 
 
@@ -69,6 +70,7 @@ def parse_data_rows(raw_rows: list[dict], source: DataSource, s: Settings) -> li
                 partner = fallback
         fio = _val(cells, source.col_fio)
         asset = _val(cells, source.col_asset)
+        bank = _val(cells, source.col_bank) if source.col_bank else ""
         done_cell = cells.get(source.col_done_flag, {})
         done = not is_default_white(done_cell.get("bg"))
 
@@ -82,6 +84,7 @@ def parse_data_rows(raw_rows: list[dict], source: DataSource, s: Settings) -> li
             fio=fio,
             asset=asset,
             done=done,
+            bank=bank,
             assets_by_type=classify_assets(asset, s),
         ))
     return out

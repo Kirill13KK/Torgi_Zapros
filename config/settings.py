@@ -13,6 +13,7 @@ class DataSource:
     col_done_flag: str
     col_write_log: str
     col_partner_fallback: str = ""
+    col_bank: str = ""
     anchor_col: str = ""
     anchor_text: str = ""
     first_row: int = 2
@@ -34,6 +35,7 @@ DEFAULT_DATA_SOURCES: list[DataSource] = [
         col_asset="E",
         col_done_flag="H",
         col_write_log="J",
+        col_bank="F",
     ),
     DataSource(
         tab_name="Собрания",

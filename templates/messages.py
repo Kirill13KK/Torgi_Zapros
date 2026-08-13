@@ -80,10 +80,13 @@ def pick_emoji(ptype: PropertyType, asset: str) -> str:
     return EMOJI_HOUSE
 
 
-def render(ptype: PropertyType, fio: str, asset: str) -> str:
-    return _TEMPLATE.format(
-        fio=fio,
-        emoji=pick_emoji(ptype, asset),
-        asset=asset,
-        need=NEEDS[ptype],
+def render(ptype: PropertyType, fio: str, asset: str, bank: str = "") -> str:
+    ownership = f"\n\n📇 Вид собственности: В залоге у {bank}" if bank else ""
+    return (
+        f"👤 Должник: {fio}\n"
+        f"\n"
+        f"{pick_emoji(ptype, asset)} Вид имущества: {asset}"
+        f"{ownership}\n"
+        f"\n"
+        f"⁉️ Необходимо: {NEEDS[ptype]}"
     )

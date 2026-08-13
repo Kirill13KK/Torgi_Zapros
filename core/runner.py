@@ -233,7 +233,7 @@ class Runner:
                 self.state.log_send(run_id, source.tab_name, row.row_index, row.partner,
                                     asset_text, ptype.value, "SKIPPED_WINDOW", None, 0)
                 continue
-            block = render(ptype, fio=row.fio or row.partner, asset=asset_text)
+            block = render(ptype, fio=row.fio or row.partner, asset=asset_text, bank=row.bank)
             to_send.append((ptype, asset_text, new_key, block))
 
         if not to_send:
