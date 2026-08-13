@@ -70,7 +70,7 @@ def parse_data_rows(raw_rows: list[dict], source: DataSource, s: Settings) -> li
                 partner = fallback
         fio = _val(cells, source.col_fio)
         asset = _val(cells, source.col_asset)
-        bank = _val(cells, source.col_bank) if source.col_bank else ""
+        bank = _normalize_bank(_val(cells, source.col_bank)) if source.col_bank else ""
         done_cell = cells.get(source.col_done_flag, {})
         done = not is_default_white(done_cell.get("bg"))
 
@@ -207,3 +207,15 @@ def _keyword_classify(text: str, s: Settings) -> PropertyType | None:
     if _CYRILLIC_RE.search(text):
         return PropertyType.REALTY
     return None
+
+
+_DASH_RE = re.compile(r"^[-–—−]+$")
+
+
+def _normalize_bank(value: str) -> str:
+    v = value.strip()
+    if not v:
+        return ""
+    if _DASH_RE.match(v):
+        return "Собственность должника"
+    return v

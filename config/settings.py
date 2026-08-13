@@ -45,6 +45,7 @@ DEFAULT_DATA_SOURCES: list[DataSource] = [
         col_asset="E",
         col_done_flag="I",
         col_write_log="L",
+        col_bank="F",
         anchor_col="A",
         anchor_text="Готовы к собранию",
     ),
