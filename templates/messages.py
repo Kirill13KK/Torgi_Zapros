@@ -80,8 +80,16 @@ def pick_emoji(ptype: PropertyType, asset: str) -> str:
     return EMOJI_HOUSE
 
 
+_DEBTOR_OWNERSHIP = "Собственность должника"
+
+
 def render(ptype: PropertyType, fio: str, asset: str, bank: str = "") -> str:
-    ownership = f"\n\n📇 Вид собственности: В залоге у {bank}" if bank else ""
+    if not bank:
+        ownership = ""
+    elif bank == _DEBTOR_OWNERSHIP:
+        ownership = f"\n\n📇 Вид собственности: {_DEBTOR_OWNERSHIP}"
+    else:
+        ownership = f"\n\n📇 Вид собственности: В залоге у {bank}"
     return (
         f"👤 Должник: {fio}\n"
         f"\n"
