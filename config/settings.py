@@ -27,6 +27,7 @@ DEFAULT_DATA_SOURCES: list[DataSource] = [
         col_asset="E",
         col_done_flag="H",
         col_write_log="I",
+        col_bank="F",
     ),
     DataSource(
         tab_name="Залоги",
